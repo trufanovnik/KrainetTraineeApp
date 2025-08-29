@@ -116,7 +116,7 @@
 					<user>postgres</user>
 					<password>postgres</password>
 					<schemas>
-						<schema>petshelter</schema>
+						<schema>krainet</schema>
 					</schemas>
 					<cleanDisabled>false</cleanDisabled>
 				</configuration>
