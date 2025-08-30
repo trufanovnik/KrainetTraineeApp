@@ -1,5 +1,7 @@
 package by.krainet.auth.controller;
 
+import by.krainet.auth.dto.AuthResponse;
+import by.krainet.auth.dto.LoginRequest;
 import by.krainet.auth.dto.RegistrationRequest;
 import by.krainet.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -18,5 +20,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegistrationRequest req) {
         return authService.register(req);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
+        return authService.login(loginRequest);
     }
 }
