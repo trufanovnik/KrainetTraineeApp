@@ -2,6 +2,7 @@ package by.krainet.auth.service;
 
 import by.krainet.auth.config.JwtUtil;
 import by.krainet.auth.dto.AuthResponse;
+import by.krainet.auth.dto.JwtRefreshRequest;
 import by.krainet.auth.dto.LoginRequest;
 import by.krainet.auth.dto.RegistrationRequest;
 import by.krainet.auth.model.RoleType;
@@ -61,5 +62,25 @@ public class AuthService {
         String access = jwtUtil.generateToken(userDetails);
         String refreshToken = jwtUtil.generateRefreshToken(userDetails);
         return ResponseEntity.ok(new AuthResponse(access, refreshToken));
+    }
+
+    @Transactional
+    public ResponseEntity<AuthResponse> refreshToken(JwtRefreshRequest jwtRefreshRequest) {
+        String token = jwtRefreshRequest.getRefreshToken();
+        if (!jwtUtil.isRefreshToken(token)) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(null);
+        }
+
+        String username = jwtUtil.extractUsername(token);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+        if (!jwtUtil.validateToken(token, userDetails)) {
+            return ResponseEntity.status(401).body(null);
+        }
+        String newAccess = jwtUtil.generateToken(userDetails);
+        String newRefreshToken = jwtUtil.generateRefreshToken(userDetails);
+        return ResponseEntity.ok(new AuthResponse(newAccess, newRefreshToken));
     }
 }
