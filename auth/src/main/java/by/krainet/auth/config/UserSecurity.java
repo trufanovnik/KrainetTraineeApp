@@ -17,7 +17,7 @@ public class UserSecurity {
     public boolean isOwnerOrAdmin(Long id, Authentication authentication) {
         String role = authentication.getAuthorities().iterator().next().getAuthority();
         System.out.println("Role: " + role);
-        if ("ROLE_ADMIN".equals(role)) {
+        if ("ROLEADMIN".equals(role)) {
             return true;
         }
         Object principal = authentication.getPrincipal();
