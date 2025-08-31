@@ -22,4 +22,12 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
         return mapper.toDto(user);
     }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new EntityNotFoundException("Пользователь с id: " + id + " не найден");
+        }
+        userRepository.deleteById(id);
+    }
 }
