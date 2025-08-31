@@ -1,8 +1,10 @@
 package by.krainet.auth.aspect;
 
+import by.krainet.auth.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
@@ -51,6 +53,20 @@ public class LoggingAspect {
         String argsString = args.length > 0 ? maskSensitiveData(Arrays.toString(args)) : "METHOD HAS NO ARGUMENTS";
 
         log.info("RUN SERVICE: SERVICE_METHOD: {}.{}\nMETHOD ARGUMENTS: [{}]", className, methodName, argsString);
+    }
+
+    @AfterThrowing(pointcut = "controllerLog() || serviceLog()", throwing = "ex")
+    public void logMethodException(JoinPoint joinPoint, Exception ex) {
+        String methodName = joinPoint.getSignature().getName();
+        String className = joinPoint.getTarget().getClass().getSimpleName();
+
+        if (ex instanceof UserNotFoundException) {
+            log.warn("Ошибка в методе: {}.{}. Сообщение: {}",
+                    className, methodName, ex.getMessage());
+        } else {
+            log.error("Системная ошибка в методе: {}.{}. Исключение: {}",
+                    className, methodName, ex.getMessage(), ex);
+        }
     }
 
     private String maskSensitiveData(String input) {
