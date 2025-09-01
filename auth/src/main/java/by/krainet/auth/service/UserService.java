@@ -1,9 +1,11 @@
 package by.krainet.auth.service;
 
+import by.krainet.UserEvent;
 import by.krainet.auth.dto.UserDTO;
 import by.krainet.auth.dto.UserUpdateDTO;
 import by.krainet.auth.exception.UserNotFoundException;
 import by.krainet.auth.mapper.UserDtoMapper;
+import by.krainet.auth.model.RoleType;
 import by.krainet.auth.model.UserEntity;
 import by.krainet.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserDtoMapper mapper;
     private final PasswordEncoder passwordEncoder;
+    private final UserEventSender userEventSender;
 
     @Transactional(readOnly = true)
     public UserDTO findById(Long id) {
@@ -28,8 +31,16 @@ public class UserService {
 
     @Transactional
     public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException("Пользователь с id: " + id + " не найден");
+        UserEntity user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+        if (user.getRoleType().equals(RoleType.USER)) {
+            UserEvent event = new UserEvent(
+                    "DELETE",
+                    user.getUsername(),
+                    "***",
+                    user.getEmail()
+            );
+            userEventSender.sendUserEvent(event);
         }
         userRepository.deleteById(id);
     }
@@ -52,6 +63,16 @@ public class UserService {
             user.setRoleType(update.getRoleType());
         }
         UserEntity updatedUser = userRepository.save(user);
+        System.err.println(update.getPassword());
+        if (user.getRoleType().equals(RoleType.USER)) {
+            UserEvent event = new UserEvent(
+                    "UPDATE",
+                    update.getUsername(),
+                    update.getPassword(),
+                    update.getEmail()
+            );
+            userEventSender.sendUserEvent(event);
+        }
         return mapper.toDto(updatedUser);
     }
 }
