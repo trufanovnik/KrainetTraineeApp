@@ -16,6 +16,7 @@
     <modules>
         <module>auth</module>
         <module>notification</module>
+        <module>shared</module>
     </modules>
 
     <properties>
