@@ -1,5 +1,6 @@
 package by.krainet.auth.service;
 
+import by.krainet.UserEvent;
 import by.krainet.auth.config.JwtUtil;
 import by.krainet.auth.dto.AuthResponse;
 import by.krainet.auth.dto.JwtRefreshRequest;
@@ -27,6 +28,7 @@ public class AuthService {
     private final CustomUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final UserEventSender userEventSender;
 
     @Transactional
     public ResponseEntity<String> register(RegistrationRequest registrationRequest) {
@@ -42,6 +44,15 @@ public class AuthService {
         user.setEmail(registrationRequest.getEmail());
         user.setRoleType(RoleType.USER);
         userRepository.save(user);
+        if (user.getRoleType().equals(RoleType.USER)) {
+            UserEvent event = new UserEvent(
+                    "CREATE",
+                    registrationRequest.getUsername(),
+                    registrationRequest.getPassword(),
+                    registrationRequest.getEmail()
+            );
+            userEventSender.sendUserEvent(event);
+        }
         return ResponseEntity.ok("Пользователь успешно зарегистрирован");
     }
 
