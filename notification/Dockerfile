@@ -13,14 +13,14 @@ RUN $JAVA_HOME/bin/jlink \
          --compress=2 \
          --output jdk
 
-FROM debian:buster-slim
+FROM alpine:3.18
 
 ARG BUILD_PATH=/opt/build
 ENV JAVA_HOME=/opt/jdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
 
-RUN groupadd --gid 1000 spring-app \
-  && useradd --uid 1000 --gid spring-app --shell /bin/bash --create-home spring-app
+RUN addgroup -g 1000 spring-app && \
+    adduser -u 1000 -G spring-app -h /home/spring-app -D spring-app
 
 USER spring-app:spring-app
 WORKDIR /opt/workspace
@@ -31,4 +31,4 @@ COPY --from=app-build $BUILD_PATH/dependencies/ ./
 COPY --from=app-build $BUILD_PATH/snapshot-dependencies/ ./
 COPY --from=app-build $BUILD_PATH/application/ ./
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
