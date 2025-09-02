@@ -67,9 +67,9 @@ public class UserService {
         if (user.getRoleType().equals(RoleType.USER)) {
             UserEvent event = new UserEvent(
                     "UPDATE",
-                    update.getUsername(),
-                    update.getPassword(),
-                    update.getEmail()
+                    updatedUser.getUsername(),
+                    updatedUser.getPassword(),
+                    updatedUser.getEmail()
             );
             userEventSender.sendUserEvent(event);
         }
