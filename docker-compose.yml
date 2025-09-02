@@ -1,5 +1,22 @@
 version: '3.8'
 services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -11,6 +28,11 @@ services:
       RABBITMQ_DEFAULT_PASS: password
     networks:
       - app-network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_running" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mailhog:
     image: mailhog/mailhog
@@ -18,6 +40,48 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    networks:
+      - app-network
+
+  auth:
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    container_name: auth
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres?currentSchema=krainet
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      FLYWAY_ENABLED: "true"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: admin
+      RABBITMQ_PASSWORD: password
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  notification:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+    container_name: notification
+    ports:
+      - "8081:8081"
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: admin
+      RABBITMQ_PASSWORD: password
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+    depends_on:
+      - rabbitmq
+      - mailhog
     networks:
       - app-network
 
